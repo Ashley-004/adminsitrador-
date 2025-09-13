@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ 'Editar Insumo' if insumo else 'Agregar Insumo' }}</title>
+    <style>
+        body { 
+            font-family: "Segoe UI", Tahoma, sans-serif; 
+            background: #eaeaea; 
+            padding: 20px; 
+            color: #333;
+        }
+
+        h1 {
+            text-align: center;
+            color: #c0392b; /* rojo elegante */
+            margin-bottom: 25px;
+        }
+
+        form { 
+            background: white; 
+            padding: 25px; 
+            border-radius: 10px; 
+            max-width: 450px; 
+            margin: auto; 
+            box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+        }
+
+        label { 
+            display: block; 
+            margin: 12px 0 6px; 
+            font-weight: bold;
+            color: #444;
+        }
+
+        input, select { 
+            width: 100%; 
+            padding: 10px; 
+            margin-bottom: 18px; 
+            border: 1px solid #ccc; 
+            border-radius: 6px; 
+            transition: border 0.2s;
+        }
+
+        input:focus, select:focus {
+            border-color: #f1c40f; 
+            outline: none;
+            box-shadow: 0 0 4px rgba(241,196,15,0.5);
+        }
+
+        button { 
+            padding: 12px 18px; 
+            background: #f1c40f; 
+            color: #2c3e50; 
+            border: none; 
+            cursor: pointer; 
+            font-weight: bold;
+            border-radius: 6px;
+            width: 100%;
+            transition: background 0.2s;
+        }
+
+        button:hover { 
+            background: #d4ac0d; 
+        }
+
+        p { 
+            text-align: center; 
+            margin-top: 15px;
+        }
+
+        a { 
+            text-decoration: none; 
+            color: #e74c3c; 
+            font-weight: bold;
+            transition: color 0.2s;
+        }
+
+        a:hover {
+            color: #c0392b;
+        }
+    </style>
+</head>
+<body>
+<h1>{{ 'Editar Insumo' if insumo else 'Agregar Insumo' }}</h1>
+<form method="POST" action="{% if insumo %}{{ url_for('editar_insumo', id=insumo.id_insumo) }}{% else %}{{ url_for('agregar_insumo') }}{% endif %}">
+    <label for="nombre">Nombre</label>
+    <input id="nombre" type="text" name="nombre" value="{{ insumo.nombre if insumo else '' }}" required>
+
+    <label for="cantidad">Cantidad</label>
+    <input id="cantidad" type="number" name="cantidad" value="{{ insumo.cantidad if insumo else '' }}" min="0" required>
+
+    <label for="precio" >Precio</label> 
+    <input id="precio" type="number"  name="precio" value="{{ insumo.precio if insumo else '' }}" min="0" required>
+
+    <label for="fecha_vencimiento">Fecha de Vencimiento</label>
+    <input id="fecha_vencimiento" type="date" name="fecha_vencimiento" 
+           value="{{ insumo.fecha_vencimiento.strftime('%Y-%m-%d') if insumo and insumo.fecha_vencimiento else '' }}">
+
+    <label for="lote">Lote</label>
+    <input id="lote" type="date" name="lote" 
+           value="{{ insumo.lote.strftime('%Y-%m-%d') if insumo and insumo.lote else '' }}">
+
+    <label for="subcategoria_id">Subcategoría</label>
+    <select id="subcategoria_id" name="subcategoria_id" required>
+        {% for sub in subcategorias %}
+            <option value="{{ sub.id_subcategoria }}" {% if insumo and insumo.subcategoria_id == sub.id_subcategoria %}selected{% endif %}>{{ sub.nombre_subcategoria }}</option>
+        {% endfor %}
+    </select>
+    <button type="submit">Guardar</button>
+</form>
+<p><a href="{{ url_for('inventario') }}">Volver</a></p>
+</body>
+</html>

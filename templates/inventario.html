@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Inventario - Parrilla 51</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='estilos.css') }}">
+</head>
+<body>
+
+<!-- HEADER Y NAVBAR -->
+    <div class="header-container">
+        <nav class="navbar"> 
+            <div class="header">
+                <img src="{{ url_for('static', filename='image.png') }}" alt="Logo Parrilla 51" class="logo">
+                <h1 class="nombre-logo">Parrilla 51</h1>
+            </div>
+            <a href="{{ url_for('index') }}">Inicio</a>
+            <a href="{{ url_for('inventario') }}">📦 Inventario</a>
+            <a href="{{ url_for('asignarol') }}">👤 Asignación Rol</a>
+            <a href="{{ url_for('consultar_reservas') }}">📅 Consultar Reservas</a>
+            <a href="{{ url_for('consultaVentas') }}">💰 Consultar Ventas</a>
+            <a href="{{ url_for('consulta_P') }}">🍔 Consultar Productos</a>
+            <a href="{{ url_for('consulta_Y') }}">🥕 Consultar Insumos</a>
+            <a href="{{ url_for('reportes') }}">📊 Reportes</a>
+        </nav>
+    </div>
+
+
+<!-- ==================== PRODUCTOS ==================== -->
+<h2>Productos</h2>
+<a href="{{ url_for('agregar_producto') }}" class="btn-add">+ Agregar Producto</a>
+
+{% if productos %}
+    <div class="productos-container">
+        {% for p in productos %}
+        <div class="card">
+
+            {% if p['imagen'] %}
+                {% if p['imagen'].startswith('http') %}
+                    <!-- Si es URL externa -->
+                    <img src="{{ p['imagen'] | trim }}"
+                         alt="{{ p['nombre'] }}"
+                         referrerpolicy="no-referrer"
+                         style="width:100%;height:180px;object-fit:cover;border-radius:10px;margin-bottom:12px;">
+                {% else %}
+                    <!-- Si es archivo local en /static/uploads/ -->
+                    <img src="{{ url_for('static', filename='uploads/' ~ p['imagen']) }}"
+                         alt="{{ p['nombre'] }}"
+                         style="width:100%;height:180px;object-fit:cover;border-radius:10px;margin-bottom:12px;">
+                {% endif %}
+            {% else %}
+                <!-- Imagen por defecto -->
+                <img src="{{ url_for('static', filename='no-image.png') }}"
+                     alt="{{ p['nombre'] }}"
+                     style="width:100%;height:180px;object-fit:cover;border-radius:10px;margin-bottom:12px;">
+            {% endif %}
+
+            <h3>{{ p['nombre'] }}</h3>
+            <p><strong>Cantidad:</strong> {{ p['cantidad'] }}</p>
+            <p><strong>Precio:</strong> COP ${{ "{:,.0f}".format(p['precio']).replace(",", ".") }}</p>
+            <p><strong>Categoría:</strong> {{ p.get('nombre_categoria', 'Sin categoría') }}</p>
+            <p><strong>Descripción:</strong> {{ p.get('descripcion', 'Sin descripción') }}</p>
+
+            <a href="{{ url_for('editar_producto', id_producto=p['id_producto']) }}" class="btn-edit">Editar</a>
+            <a href="{{ url_for('confirmar_eliminacion', tipo='producto', item_id=p['id_producto']) }}" class="btn-delete">Eliminar</a>
+        </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <p>No hay productos registrados</p>
+{% endif %}
+
+
+
+<!-- ==================== INSUMOS ==================== -->
+<h2>Insumos</h2>
+<a href="{{ url_for('agregar_insumo') }}" class="btn-add">+ Agregar Insumo</a>
+<table>
+    <thead>
+        <tr>
+            <th>Nombre</th>
+            <th>Cantidad</th>
+            <th>Precio</th>
+            <th>Fecha Vencimiento</th>
+            <th>Lote</th>
+            <th>Subcategoría</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for i in insumos %}
+    <tr>
+        <td>{{ i['nombre'] }}</td>
+        <td>{{ i['cantidad'] }}</td>
+        <td>COP ${{ "{:,.0f}".format(i['precio']).replace(",", ".") }}</td>
+        <td>{{ i['fecha_vencimiento'].strftime('%Y-%m-%d') if i['fecha_vencimiento'] else '' }}</td>
+        <td>{{ i['lote'].strftime('%Y-%m-%d') if i['lote'] else '' }}</td>
+        <td>{{ i.get('nombre_subcategoria', 'Sin subcategoría') }}</td>
+        <td>
+            <a href="{{ url_for('editar_insumo', id=i['id_insumo']) }}" class="btn-edit">Editar</a> |
+            <a href="{{ url_for('confirmar_eliminacion', tipo='insumo', item_id=i['id_insumo']) }}" class="btn-delete">Eliminar</a>
+        </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="7">No hay insumos registrados</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+<!-- ==================== MESAS ==================== -->
+<h2>Mesas</h2>
+<a href="{{ url_for('agregar_mesa') }}" class="btn-add">+ Agregar Mesa</a>
+
+<table>
+    <thead>
+        <tr>
+            <th>Número de Mesa</th>
+            <th>Capacidad</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for m in mesas %}
+    <tr>
+        <td>{{ m['numero'] }}</td>
+        <td>{{ m['capacidad'] }}</td>
+        <td>
+            {% if m['estado'] == 'Disponible' %}
+                <span class="badge bg-success">Disponible</span>
+            {% else %}
+                <span class="badge bg-danger">No disponible</span>
+            {% endif %}
+        </td>
+        <td>
+            <a href="{{ url_for('cambiar_estado', id_mesa=m['id_mesa']) }}" class="btn-edit">Cambiar Estado</a> |
+            <a href="{{ url_for('confirmar_eliminacion', tipo='mesa', item_id=m['id_mesa']) }}" class="btn-delete">Eliminar</a>
+        </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="5">No hay mesas registradas</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+
+
+<!-- PIE DE PÁGINA -->
+<footer>
+    &copy; 2025 Parrilla 51 - Todos los derechos reservados
+</footer>
+
+</body>
+</html>

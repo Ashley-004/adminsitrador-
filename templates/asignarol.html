@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Asignar Rol y Estado</title>
+    <style>
+        /* ==================== ESTILOS GENERALES ==================== */
+        body {
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #5f5f5f; /* Gris oscuro */
+            color: #f0f0f0;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* ==================== HEADER Y NAVBAR ==================== */
+        .header-container {
+            background-color: #4a4a4a;
+            border-bottom: 2px solid #f1c40f;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+        }
+
+        .navbar {
+            display: flex;
+            align-items: center;
+            padding: 12px 30px;
+            gap: 25px;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-right: auto; /* Empuja el resto a la derecha */
+        }
+
+        .header .logo {
+            width: 50px;
+            height: auto;
+            border-radius: 8px;
+        }
+
+        .header .nombre-logo {
+            font-size: 26px;
+            color: #f1c40f;
+            margin: 0;
+        }
+
+        .navbar a {
+            color: #f0f0f0;
+            text-decoration: none;
+            font-weight: bold;
+            transition: color 0.3s;
+        }
+
+        .navbar a:hover {
+            color: #f1c40f;
+        }
+
+        /* ==================== TABLAS ==================== */
+        main {
+            padding: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+            background: #5f5f5f;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        thead {
+            background: #4a4a4a;
+            color: #f0f0f0;
+        }
+
+        thead th {
+            padding: 12px;
+            text-align: center;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 14px;
+        }
+
+        tbody td {
+            padding: 10px;
+            border-bottom: 1px solid #444;
+            text-align: center;
+        }
+
+        tbody tr:nth-child(even) {
+            background: #6a6a6a;
+        }
+
+        tbody tr:hover {
+            background: #505050;
+        }
+
+        /* ==================== BOTONES ==================== */
+        a, button {
+            text-decoration: none;
+            padding: 6px 12px;
+            border-radius: 5px;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.2s ease;
+            border: none;
+            cursor: pointer;
+        }
+
+        .activo {
+            background: #28a745;
+            color: #fff;
+        }
+        .activo:hover { background: #218838; }
+
+        .inactivo {
+            background: #e74c3c;
+            color: #fff;
+        }
+        .inactivo:hover { background: #c0392b; }
+
+        .rol {
+            background: #3772df;
+            color: #fff;
+        }
+        .rol:hover { background: #2c5bb5; }
+
+        .admin {
+            background: #f1c40f;
+            color: #1e1e1e;
+        }
+        .admin:hover { background: #d4ac0d; }
+
+        .disabled {
+            color: #ccc;
+            font-style: italic;
+        }
+
+        /* ==================== MODAL ==================== */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: #4a4a4a;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            width: 320px;
+            color: #f0f0f0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.7);
+        }
+
+        .modal-content h3 {
+            margin-bottom: 15px;
+            color: #f1c40f;
+        }
+
+        .modal-content p {
+            margin-bottom: 20px;
+        }
+
+        .modal-content button {
+            margin: 5px;
+        }
+
+        /* ==================== PIE DE PÁGINA ==================== */
+        footer {
+            text-align: center;
+            padding: 15px;
+            background-color: #4a4a4a;
+            color: #f0f0f0;
+            margin-top: 40px;
+            border-top: 2px solid #f1c40f;
+        }
+    </style>
+</head>
+<body>
+   <!-- HEADER Y NAVBAR -->
+    <div class="header-container">
+        <nav class="navbar"> 
+            <div class="header">
+                <img src="{{ url_for('static', filename='image.png') }}" alt="Logo Parrilla 51" class="logo">
+                <h1 class="nombre-logo">Parrilla 51</h1>
+            </div>
+            <a href="{{ url_for('index') }}">Inicio</a>
+            <a href="{{ url_for('inventario') }}">📦 Inventario</a>
+            <a href="{{ url_for('asignarol') }}">👤 Asignación Rol</a>
+            <a href="{{ url_for('consultar_reservas') }}">📅 Consultar Reservas</a>
+            <a href="#">🛒 Consultar Pedidos y Domicilios</a>
+            <a href="#">💰 Consultar Ventas</a>
+            <a href="#">🍔 Consultar Productos</a>
+            <a href="#">🥕 Consultar Insumos</a>
+            <a href="#">📊 Reportes</a>
+        </nav>
+    </div>
+    <!-- CONTENIDO PRINCIPAL -->
+    <main>
+        <h2>Gestión de Usuarios</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Usuario</th>
+                    <th>Correo</th>
+                    <th>Rol</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for u in usuarios %}
+                <tr>
+                    <td>{{ u.id_usuario }}</td>
+                    <td>{{ u.nombre }} {{ u.apellido }}</td>
+                    <td>{{ u.correo }}</td>
+                    <td>{{ u.rol }}</td>
+                    <td>{{ u.estado }}</td>
+                    <td>
+                        {% if u.rol == "administrador" %}
+                            <span class="disabled">Administrador fijo</span>
+                        {% else %}
+                            {% if u.estado == "activo" %}
+                                <a href="{{ url_for('cambiar_estado_usuario', id_usuario=u.id_usuario, nuevo_estado='inactivo') }}" class="inactivo">Desactivar</a>
+                            {% else %}
+                                <a href="{{ url_for('cambiar_estado_usuario', id_usuario=u.id_usuario, nuevo_estado='activo') }}" class="activo">Activar</a>
+                            {% endif %}
+
+                            <a href="{{ url_for('cambiar_rol_usuario', id_usuario=u.id_usuario, nuevo_rol='empleado') }}" class="rol">Empleado</a>
+                            <a href="{{ url_for('cambiar_rol_usuario', id_usuario=u.id_usuario, nuevo_rol='cliente') }}" class="rol">Cliente</a>
+
+                            <button class="admin" onclick="abrirModal({{ u.id_usuario }})">Administrador</button>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </main>
+
+    <!-- MODAL -->
+    <div class="modal" id="modalConfirmacion">
+        <div class="modal-content">
+            <h3>Confirmación</h3>
+            <p>¿Deseas convertir este usuario en <b>Administrador</b>?</p>
+            <button id="confirmarBtn" class="admin">Sí, convertir</button>
+            <button onclick="cerrarModal()" class="inactivo">Cancelar</button>
+        </div>
+    </div>
+
+    <footer>
+        © 2025 - Panel de Administración
+    </footer>
+
+    <script>
+        let usuarioIdSeleccionado = null;
+
+        function abrirModal(idUsuario) {
+            usuarioIdSeleccionado = idUsuario;
+            document.getElementById("modalConfirmacion").style.display = "flex";
+        }
+
+        function cerrarModal() {
+            document.getElementById("modalConfirmacion").style.display = "none";
+            usuarioIdSeleccionado = null;
+        }
+
+        document.getElementById("confirmarBtn").addEventListener("click", function() {
+            if (usuarioIdSeleccionado) {
+                window.location.href = `/usuario/cambiar_rol/${usuarioIdSeleccionado}/administrador`;
+            }
+        });
+    </script>
+</body>
+</html>
