@@ -1,26 +1,20 @@
 from flask import Flask, render_template, request, redirect, url_for, send_file
 import mysql.connector
 from contextlib import closing
-import io
-
-# Reportes PDF
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
-from reportlab.lib import colors
-from reportlab.lib.pagesizes import letter, landscape, A4
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-
-# Reportes Excel
-import openpyxl
-
-
-
-# =====================
-# inatalar la siguiente libreria = pip install reportlab openpyxl
-# =====================
 
 app = Flask(__name__)
 
+# =====================
+# REGISTRAR BLUEPRINT DE REPORTES
+# =====================
+from reportes import reportes_bp
+app.register_blueprint(reportes_bp, url_prefix="/reportes")
+
+
+
+
 def get_db_connection():
+
     return mysql.connector.connect(
         host="localhost",
         user="root",
@@ -289,7 +283,6 @@ def confirmar_eliminacion(tipo, item_id):
 # =====================
 # ROLES DE USUARIOS Y ESTADO
 # =====================
-
 @app.route("/asignarol", methods=["GET", "POST"])
 def asignarol():
     if request.method == "POST":
@@ -313,7 +306,6 @@ def asignarol():
     return render_template("asignarol.html", usuarios=usuarios)
 
 
-# 🔹 Cambié el nombre de la función para evitar conflicto con cambiar_estado de mesas
 @app.route("/usuario/cambiar_estado/<int:id_usuario>/<string:nuevo_estado>")
 def cambiar_estado_usuario(id_usuario, nuevo_estado):
     with closing(get_db_connection()) as conn, closing(conn.cursor()) as cursor:
@@ -322,7 +314,6 @@ def cambiar_estado_usuario(id_usuario, nuevo_estado):
     return redirect(url_for("asignarol"))
 
 
-# 🔹 También renombré esta por claridad
 @app.route("/usuario/cambiar_rol/<int:id_usuario>/<string:nuevo_rol>")
 def cambiar_rol_usuario(id_usuario, nuevo_rol):
     with closing(get_db_connection()) as conn, closing(conn.cursor()) as cursor:
@@ -331,7 +322,9 @@ def cambiar_rol_usuario(id_usuario, nuevo_rol):
     return redirect(url_for("asignarol"))
 
 
+# =====================
 # CONSULTAR RESERVAS
+# =====================
 @app.route("/consultar_reservas")
 def consultar_reservas():
     with closing(get_db_connection()) as conn, closing(conn.cursor(dictionary=True)) as cursor:
@@ -355,6 +348,9 @@ def consultar_reservas():
     return render_template("consultar_reservas.html", reservas=reservas)
 
 
+# =====================
+# CONSULTAR VENTAS
+# =====================
 @app.route("/consultaVentas")
 def consultaVentas():
     pedidos_restaurante = []
@@ -407,7 +403,6 @@ def consultaVentas():
                            pedidos_domicilio=pedidos_domicilio)
 
 
-
 # =====================
 # CONSULTAR PRODUCTOS
 # =====================
@@ -444,214 +439,8 @@ def consulta_Y():
     return render_template("consulta_Y.html", insumos=insumos)
 
 
-
-# ==================== REPORTES ====================
-
-@app.route("/reportes")
-def reportes():
-    with closing(get_db_connection()) as conn, closing(conn.cursor(dictionary=True)) as cursor:
-        # Pedidos restaurante
-        cursor.execute("""
-            SELECT p.id_pedido, u.nombre, u.apellido, p.fecha, p.hora, p.total, p.estado
-            FROM pedidos p
-            JOIN usuarios u ON p.cod_usuario = u.id_usuario
-            WHERE p.tipo_entrega = 'restaurante'
-        """)
-        pedidos_restaurante = cursor.fetchall()
-
-        # Pedidos domicilio
-        cursor.execute("""
-            SELECT p.id_pedido, u.nombre, u.apellido, p.fecha, p.hora, p.total, p.estado
-            FROM pedidos p
-            JOIN usuarios u ON p.cod_usuario = u.id_usuario
-            WHERE p.tipo_entrega = 'domicilio'
-        """)
-        pedidos_domicilio = cursor.fetchall()
-
-        # Reservas (usar la vista)
-        cursor.execute("SELECT * FROM vista_reservas_mesas")
-        reservas = cursor.fetchall()
-
-        # Inventario bajo (solo insumos, no productos)
-        cursor.execute("SELECT * FROM vista_insumos_stock_bajo")
-        stock_bajo = cursor.fetchall()
-
-    return render_template(
-        "reportes.html",
-        pedidos_restaurante=pedidos_restaurante or [],
-        pedidos_domicilio=pedidos_domicilio or [],
-        reservas=reservas or [],
-        stock_bajo=stock_bajo or []
-    )
-
-
-# ==================== REPORTES PDF ====================
-
-@app.route("/reportes/pdf")
-def reportes_pdf():
-    with closing(get_db_connection()) as conn:
-        with closing(conn.cursor(dictionary=True)) as cursor:
-            # Pedidos en Restaurante
-            cursor.execute("""
-                SELECT p.id_pedido, u.nombre, u.apellido, p.fecha, p.hora, p.total, p.estado
-                FROM pedidos p
-                INNER JOIN usuarios u ON p.cod_usuario = u.id_usuario
-                WHERE p.tipo_entrega = 'restaurante'
-            """)
-            pedidos_restaurante = cursor.fetchall()
-
-            # Pedidos a Domicilio
-            cursor.execute("""
-                SELECT p.id_pedido, u.nombre, u.apellido, p.fecha, p.hora, p.total, p.estado
-                FROM pedidos p
-                INNER JOIN usuarios u ON p.cod_usuario = u.id_usuario
-                WHERE p.tipo_entrega = 'domicilio'
-            """)
-            pedidos_domicilio = cursor.fetchall()
-
-            # Reservas (desde vista con mesa y capacidad)
-            cursor.execute("SELECT * FROM vista_reservas_mesas")
-            reservas = cursor.fetchall()
-
-            # Inventario bajo
-            cursor.execute("SELECT * FROM insumos WHERE cantidad < 5")
-            inventario = cursor.fetchall()
-
-    buffer = io.BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=letter)
-    elements = []
-    styles = getSampleStyleSheet()
-
-    # ---- Pedidos en Restaurante ----
-    elements.append(Paragraph("Pedidos en Restaurante", styles['Heading2']))
-    data = [["ID", "Cliente", "Fecha", "Hora", "Total", "Estado"]]
-    if pedidos_restaurante:
-        for p in pedidos_restaurante:
-            data.append([p['id_pedido'], f"{p['nombre']} {p['apellido']}", str(p['fecha']),
-                         str(p['hora']), f"${p['total']:.2f}", p['estado']])
-    else:
-        data.append(["-", "No hay pedidos en restaurante", "-", "-", "-", "-"])
-    elements.append(Table(data))
-    elements.append(Spacer(1, 12))
-
-    # ---- Pedidos a Domicilio ----
-    elements.append(Paragraph("Pedidos a Domicilio", styles['Heading2']))
-    data = [["ID", "Cliente", "Fecha", "Hora", "Total", "Estado"]]
-    if pedidos_domicilio:
-        for p in pedidos_domicilio:
-            data.append([p['id_pedido'], f"{p['nombre']} {p['apellido']}", str(p['fecha']),
-                         str(p['hora']), f"${p['total']:.2f}", p['estado']])
-    else:
-        data.append(["-", "No hay pedidos a domicilio", "-", "-", "-", "-"])
-    elements.append(Table(data))
-    elements.append(Spacer(1, 12))
-
-    # ---- Reservas ----
-    elements.append(Paragraph("Reservas", styles['Heading2']))
-    data = [["ID", "Fecha", "Hora", "Personas", "Estado", "Mesa", "Capacidad"]]
-    if reservas:
-        for r in reservas:
-            data.append([r['id_reserva'], str(r['fecha']), str(r['hora']), r['cant_personas'],
-                         r['estado'], r['mesa'], r['capacidad']])
-    else:
-        data.append(["-", "No hay reservas registradas", "-", "-", "-", "-", "-"])
-    elements.append(Table(data))
-    elements.append(Spacer(1, 12))
-
-    # ---- Inventario ----
-    elements.append(Paragraph("Inventario Bajo", styles['Heading2']))
-    data = [["ID Insumo", "Nombre", "Cantidad", "Precio"]]
-    if inventario:
-        for i in inventario:
-            data.append([i['id_insumo'], i['nombre'], i['cantidad'], f"${i['precio']:.2f}"])
-    else:
-        data.append(["-", "No hay insumos con stock bajo", "-", "-"])
-    elements.append(Table(data))
-
-    doc.build(elements)
-    buffer.seek(0)
-    return send_file(buffer, as_attachment=True, download_name="reporte_general.pdf", mimetype="application/pdf")
-
-
-# ==================== REPORTES EXCEL ====================
-
-@app.route("/reportes/excel")
-def reportes_excel():
-    with closing(get_db_connection()) as conn:
-        with closing(conn.cursor(dictionary=True)) as cursor:
-            cursor.execute("""
-                SELECT p.id_pedido, u.nombre, u.apellido, p.fecha, p.hora, p.total, p.estado
-                FROM pedidos p
-                INNER JOIN usuarios u ON p.cod_usuario = u.id_usuario
-                WHERE p.tipo_entrega = 'restaurante'
-            """)
-            pedidos_restaurante = cursor.fetchall()
-
-            cursor.execute("""
-                SELECT p.id_pedido, u.nombre, u.apellido, p.fecha, p.hora, p.total, p.estado
-                FROM pedidos p
-                INNER JOIN usuarios u ON p.cod_usuario = u.id_usuario
-                WHERE p.tipo_entrega = 'domicilio'
-            """)
-            pedidos_domicilio = cursor.fetchall()
-
-            cursor.execute("SELECT * FROM vista_reservas_mesas")
-            reservas = cursor.fetchall()
-
-            cursor.execute("SELECT * FROM insumos WHERE cantidad < 5")
-            inventario = cursor.fetchall()
-
-    wb = openpyxl.Workbook()
-
-    # ---- Pedidos Restaurante ----
-    ws = wb.active
-    ws.title = "Pedidos Restaurante"
-    ws.append(["ID", "Cliente", "Fecha", "Hora", "Total", "Estado"])
-    if pedidos_restaurante:
-        for p in pedidos_restaurante:
-            ws.append([p['id_pedido'], f"{p['nombre']} {p['apellido']}", str(p['fecha']),
-                       str(p['hora']), p['total'], p['estado']])
-    else:
-        ws.append(["-", "No hay pedidos en restaurante", "-", "-", "-", "-"])
-
-    # ---- Pedidos Domicilio ----
-    ws = wb.create_sheet("Pedidos Domicilio")
-    ws.append(["ID", "Cliente", "Fecha", "Hora", "Total", "Estado"])
-    if pedidos_domicilio:
-        for p in pedidos_domicilio:
-            ws.append([p['id_pedido'], f"{p['nombre']} {p['apellido']}", str(p['fecha']),
-                       str(p['hora']), p['total'], p['estado']])
-    else:
-        ws.append(["-", "No hay pedidos a domicilio", "-", "-", "-", "-"])
-
-    # ---- Reservas ----
-    ws = wb.create_sheet("Reservas")
-    ws.append(["ID Reserva", "Fecha", "Hora", "Personas", "Estado", "Mesa", "Capacidad"])
-    if reservas:
-        for r in reservas:
-            ws.append([r['id_reserva'], str(r['fecha']), str(r['hora']), r['cant_personas'],
-                       r['estado'], r['mesa'], r['capacidad']])
-    else:
-        ws.append(["-", "No hay reservas registradas", "-", "-", "-", "-", "-"])
-
-    # ---- Inventario Bajo ----
-    ws = wb.create_sheet("Inventario Bajo")
-    ws.append(["ID Insumo", "Nombre", "Cantidad", "Precio"])
-    if inventario:
-        for i in inventario:
-            ws.append([i['id_insumo'], i['nombre'], i['cantidad'], i['precio']])
-    else:
-        ws.append(["-", "No hay insumos con stock bajo", "-", "-"])
-
-    buffer = io.BytesIO()
-    wb.save(buffer)
-    buffer.seek(0)
-
-    return send_file(buffer, as_attachment=True, download_name="reporte_general.xlsx", mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-
 # =====================
-# MAIN
+# INICIO APP
 # =====================
 if __name__ == "__main__":
     app.run(debug=True)
-    

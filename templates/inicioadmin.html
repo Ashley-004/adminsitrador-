@@ -111,13 +111,14 @@
             color: inherit;
         }
     </style>
+
     <!-- HEADER Y NAVBAR -->
-<nav class="navbar"> 
-    <div class="header">
-        <img src="{{ url_for('static', filename='image.png') }}" alt="Logo Parrilla 51" class="logo">
-        <h1 class="nombre-logo">Parrilla 51</h1>
-    </div>
-</nav>
+    <nav class="navbar"> 
+        <div class="header">
+            <img src="{{ url_for('static', filename='image.png') }}" alt="Logo Parrilla 51" class="logo">
+            <h1 class="nombre-logo">Parrilla 51</h1>
+        </div>
+    </nav>
 </head>
 <body>
 
@@ -128,43 +129,40 @@
 <div class="dashboard">
  
     <a href="{{ url_for('inventario') }}" class="card" role="button" aria-label="Inventario">
-    <i class="fa-solid fa-box"></i>
-    <p>📦 Inventario</p>
-</a>
+        <i class="fa-solid fa-box"></i>
+        <p>📦 Inventario</p>
+    </a>
 
-<a href="{{ url_for('asignarol') }}" class="card" role="button" aria-label="Asignación de Rol">
-    <i class="fa-solid fa-user-gear"></i>
-    <p>👤 Asignación Rol</p>
-</a>
+    <a href="{{ url_for('asignarol') }}" class="card" role="button" aria-label="Asignación de Rol">
+        <i class="fa-solid fa-user-gear"></i>
+        <p>👤 Asignación Rol</p>
+    </a>
 
-<a href="{{ url_for('consultar_reservas') }}" class="card" role="button" aria-label="Consultar Reservas">
-    <i class="fa-solid fa-calendar-check"></i>
-    <p>➕ Consultar Reservas</p>
-</a>
+    <a href="{{ url_for('consultar_reservas') }}" class="card" role="button" aria-label="Consultar Reservas">
+        <i class="fa-solid fa-calendar-check"></i>
+        <p>➕ Consultar Reservas</p>
+    </a>
 
+    <a href="{{ url_for('consulta_P') }}" class="card" role="button" aria-label="Consultar Productos">
+        <i class="fa-solid fa-burger"></i>
+        <p>🍔 Consultar Productos</p>
+    </a>
 
-<a href="{{ url_for('consulta_P') }}" class="card" role="button" aria-label="Consultar Productos">
-    <i class="fa-solid fa-burger"></i>
-    <p>🍔 Consultar Productos</p>
-</a>
+    <a href="{{ url_for('consulta_Y') }}" class="card" role="button" aria-label="Consultar Insumos">
+        <i class="fa-solid fa-carrot"></i>
+        <p>🥕 Consultar Insumos</p>
+    </a>
 
-<a href="{{ url_for('consulta_Y') }}" class="card" role="button" aria-label="Consultar Insumos">
-    <i class="fa-solid fa-carrot"></i>
-    <p>🥕 Consultar Insumos</p>
-</a>
+    <a href="{{ url_for('consultaVentas') }}" class="card" role="button" aria-label="Consultar Ventas">
+        <i class="fa-solid fa-cash-register"></i>
+        <p>💰 Consultar Ventas</p>
+    </a>
 
-<a href="{{ url_for('consultaVentas') }}" class="card" role="button" aria-label="Consultar Ventas">
-    <i class="fa-solid fa-cash-register"></i>
-    <p>💰 Consultar Ventas</p>
-</a>
-
-
-
-<a href="{{ url_for('reportes') }}" class="card" role="button" aria-label="Reportes">
-    <i class="fa-solid fa-chart-line"></i>
-    <p>📊 Reportes</p>
-</a>
-
+    <!-- ✅ Reportes corregido -->
+    <a href="{{ url_for('reportes.reportes') }}" class="card" role="button" aria-label="Reportes">
+        <i class="fa-solid fa-chart-column"></i>
+        <p>📊 Reportes</p>
+    </a>
 
     <!-- puedes añadir más tarjetas siguiendo el mismo patrón -->
 </div>

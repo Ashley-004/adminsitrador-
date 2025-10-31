@@ -1,0 +1,12 @@
+amor te envio todo pero solo para conectar usa el reportes.html reportes.py y revisa tambin el inicioadmin.html y el crud.py y eso todo :3
+
+descarga estas librerias para que te sirva todo
+Estas son las que tu código usa explícitamente:
+
+Librería    	                        Instalación	                                   Para qué sirve
+Flask	                                pip install flask	                           Framework web
+mysql-connector-python              	pip install mysql-connector-python          	Conectar con MySQL
+pandas	                                pip install pandas	                            Manejo de datos y exportar Excel
+openpyxl	                            pip install openpyxl	                         Guardar archivos Excel (.xlsx) con pandas
+fpdf	                                pip install fpdf	                              Generar PDFs
+python-dotenv (opcional)	            pip install python-dotenv                   	Manejar variables de entorno como la contraseña DB
